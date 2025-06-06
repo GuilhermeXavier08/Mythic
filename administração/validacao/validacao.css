@@ -1,0 +1,140 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #3a3939;
+    color: white;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #3a3939;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo img {
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.logo h1 {
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.user-data {
+    background-color: #d3d3d3;
+    color: black;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.user-data h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.user-data p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    background-color: #3a3939;
+    padding: 20px;
+}
+
+.header {
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.proposals {
+    background-color: #cfcfcf;
+    color: black;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.proposals h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.all-proposals {
+    text-align: center;
+    font-weight: bold;
+    color: black;
+    margin-bottom: 20px;
+}
+
+.all-proposals span {
+    color: blue;
+}
+
+.proposal-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+}
+
+.btn-approve {
+    background-color: #34d458;
+    border: none;
+    border-radius: 8px;
+    font-size: 24px;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+}
+
+.btn-reject {
+    background-color: #ff4c4c;
+    border: none;
+    border-radius: 8px;
+    font-size: 24px;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+}
+
+.game-title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: blue;
+    text-decoration: underline;
+}
+
+.game-title a {
+    text-decoration: none;
+    color: blue;
+}
