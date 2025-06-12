@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap');
+html{
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+body{
+    margin: 0;
+    font-weight: normal;
+}
+.container{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.left{
+    height: 100vh;
+    width: 30%;
+    background-color: #555555;
+    display: flex;
+    padding-top: 150px;
+    align-items: center;
+    flex-direction: column;
+}
+.left h1{
+    font-family: "Jaro";
+    font-size: 64px;
+    color: white;
+    font-weight: normal;
+}
+.left img{
+    width: 250px;
+}
+
+.links{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    width: 200px;
+    margin-bottom: 5px;
+    align-self: flex-start;
+    margin-left: 70px;
+
+}
+.links img{
+    width: 42px;
+}
+.links a{
+    font-family: "Jaro";
+    text-decoration: none;
+    margin-bottom: 10px;
+    margin-left: 20px;
+    color: white;
+    font-size: 40px;
+}
+
+
+.right{
+    height: 100vh;
+    width: 70%;
+    background-color: #353535;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.library {
+    width: 90%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.game-card {
+    background-color: #1f1f1f;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+}
+
+.game-card img {
+    width: 70px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-family: "Jaro";
+    font-size: 20px;
+}
+
+
+.size {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.abrir {
+    margin-top: 5px;
+    margin-left: 20px;
+    padding: 5px 15px;
+    font-family: "Jaro";
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 80%;
+    height: 100%;
+    text-align: center;
+}
+
+.abrir:hover {
+    background-color: #0056b3;
+}
+
+.abrir a{
+    text-decoration: none;
+    color: white;
+}

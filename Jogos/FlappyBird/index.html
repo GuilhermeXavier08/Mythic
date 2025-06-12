@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #303030;
+            color: #ffffff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            background-color: #87CEEB; /* Sky Blue */
+            border: 5px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: block;
+            width: 100%;
+            max-width: 1000px;
+
+        }
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        #ui-container {
+             display: flex;
+             justify-content: space-between;
+             margin-top: 1rem;
+             padding: 0 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 flex items-center justify-center h-screen">
+
+    <div class="container">
+        <canvas id="gameCanvas" width="1000" height="640"></canvas>
+        <div id="ui-container" class="text-white text-lg">
+            <span>Score: <span id="currentScore">0</span></span>
+            <span>High Score: <span id="highScore">0</span></span>
+        </div>
+        <div id="userIdDisplay" class="text-xs text-gray-400 mt-2"></div>
+    </div>
+    
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Setup ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'flappy-bird-default';
+        let firebaseConfig;
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "test", authDomain: "test.firebaseapp.com", projectId: "test" };
+        } catch (e) {
+            console.error("Firebase config parsing error:", e);
+            firebaseConfig = { apiKey: "test", authDomain: "test.firebaseapp.com", projectId: "test" };
+        }
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let userId = null;
+        let userDocRef = null;
+        
+        // --- Game Setup ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const currentScoreEl = document.getElementById('currentScore');
+        const highScoreEl = document.getElementById('highScore');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+
+        // --- Game Constants ---
+        const BIRD_WIDTH = 40;
+        const BIRD_HEIGHT = 30;
+        const PIPE_WIDTH = 120;
+        const PIPE_GAP = 180;
+        const GRAVITY = 0.3; // Mude este valor para alterar a velocidade da queda do pássaro (números menores = queda mais lenta)
+        const LIFT = -5;
+        const PIPE_SPEED = -10; // Mude este valor para alterar a velocidade do mapa (números mais próximos de 0 = mais devagar)
+        const PIPE_SPAWN_INTERVAL = 100; // Mude este valor para alterar a distância entre os canos (números maiores = mais longe)
+
+        // --- Game State ---
+        let bird, pipes, score, highScore, frames, isGameStarted, isGameOver;
+        
+        // --- Firebase Authentication and Data Loading ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                userIdDisplay.textContent = `User ID: ${userId}`;
+                userDocRef = doc(db, `artifacts/${appId}/users/${userId}/flappyBird/gameState`);
+                
+                // Use onSnapshot for real-time high score updates
+                onSnapshot(userDocRef, async (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        highScore = data.highScore || 0;
+                        highScoreEl.textContent = highScore;
+                        console.log("High score loaded/updated:", highScore);
+                    } else {
+                        console.log("No previous game state found. Initializing.");
+                        highScore = 0;
+                        highScoreEl.textContent = highScore;
+                        // Initialize document for the new user
+                        await setDoc(userDocRef, { highScore: 0, lastPlayed: serverTimestamp() });
+                    }
+                }, (error) => {
+                    console.error("Error with Firestore snapshot:", error);
+                });
+
+            } else {
+                userIdDisplay.textContent = "Not signed in.";
+                console.log("User is not signed in.");
+            }
+             // Initialize game state after auth check
+            resetGame();
+            gameLoop();
+        });
+
+        async function authenticateUser() {
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Signed in with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+        }
+        authenticateUser();
+
+
+        function resetGame() {
+            bird = {
+                x: canvas.width / 4,
+                y: canvas.height / 2,
+                width: BIRD_WIDTH,
+                height: BIRD_HEIGHT,
+                velocityY: 0
+            };
+            pipes = [];
+            score = 0;
+            frames = 0;
+            isGameStarted = false;
+            isGameOver = false;
+            currentScoreEl.textContent = 0;
+            if(highScore === undefined) highScore = 0; // Ensure high score is defined
+            highScoreEl.textContent = highScore;
+        }
+
+        async function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                highScoreEl.textContent = highScore;
+                if (userDocRef) {
+                    try {
+                        await setDoc(userDocRef, { highScore: highScore, lastPlayed: serverTimestamp() }, { merge: true });
+                        console.log("High score updated in Firestore:", highScore);
+                    } catch (error) {
+                        console.error("Error updating high score:", error);
+                    }
+                }
+            }
+        }
+
+        function flap() {
+            if (!isGameOver) {
+                bird.velocityY = LIFT;
+            }
+        }
+
+        function drawBird() {
+            ctx.fillStyle = '#FFD700'; // Yellow bird
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+
+            // Simple bird shape
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.width / 2, 0.2 * Math.PI, 1.8 * Math.PI, false);
+            ctx.lineTo(bird.x + bird.width/2, bird.y);
+            ctx.fill();
+            ctx.stroke();
+
+            // Eye
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(bird.x + bird.width / 4, bird.y - bird.height / 8, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = '#008000'; // Green pipes
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            pipes.forEach(pipe => {
+                // Top pipe
+                ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
+                ctx.strokeRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
+                // Bottom pipe
+                ctx.fillRect(pipe.x, canvas.height - pipe.bottomHeight, PIPE_WIDTH, pipe.bottomHeight);
+                ctx.strokeRect(pipe.x, canvas.height - pipe.bottomHeight, PIPE_WIDTH, pipe.bottomHeight);
+            });
+        }
+        
+        function updateGame() {
+            if (!isGameStarted) return;
+            if (isGameOver) return;
+            
+            // Bird physics
+            bird.velocityY += GRAVITY;
+            bird.y += bird.velocityY;
+
+            // Collision with top/bottom
+            if (bird.y - bird.height / 2 < 0 || bird.y + bird.height / 2 > canvas.height) {
+                endGame();
+            }
+
+            // Pipe management
+            if (frames % PIPE_SPAWN_INTERVAL === 0) {
+                const topHeight = Math.random() * (canvas.height - PIPE_GAP - 150) + 50;
+                const bottomHeight = canvas.height - topHeight - PIPE_GAP;
+                pipes.push({ x: canvas.width, topHeight, bottomHeight, passed: false });
+            }
+
+            pipes.forEach(pipe => {
+                pipe.x += PIPE_SPEED;
+
+                // Collision with pipes
+                if (
+                    bird.x + bird.width / 2 > pipe.x &&
+                    bird.x - bird.width / 2 < pipe.x + PIPE_WIDTH &&
+                    (bird.y - bird.height / 2 < pipe.topHeight || bird.y + bird.height / 2 > canvas.height - pipe.bottomHeight)
+                ) {
+                    endGame();
+                }
+
+                // Score update
+                if (!pipe.passed && pipe.x + PIPE_WIDTH < bird.x) {
+                    score++;
+                    currentScoreEl.textContent = score;
+                    pipe.passed = true;
+                }
+            });
+
+            // Remove off-screen pipes
+            pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH > 0);
+            frames++;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBird();
+            drawPipes();
+
+            if (!isGameStarted && !isGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '24px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.fillText('Click to Start', canvas.width / 2, canvas.height / 2);
+            }
+
+            if (isGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '36px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 40);
+                ctx.font = '20px "Press Start 2P"';
+                ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2);
+                ctx.fillText('Click to Restart', canvas.width / 2, canvas.height / 2 + 40);
+            }
+        }
+        
+        function gameLoop() {
+            updateGame();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function startGame() {
+             if (!isGameStarted) {
+                isGameStarted = true;
+            }
+            if (isGameOver) {
+                resetGame();
+                isGameStarted = true;
+            }
+            flap();
+        }
+
+        function endGame() {
+            if (isGameOver) return; // Prevent multiple calls
+            isGameOver = true;
+            isGameStarted = false;
+            updateHighScore();
+        }
+
+        canvas.addEventListener('click', startGame);
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                 e.preventDefault(); // Prevent page scrolling
+                 startGame();
+            }
+        });
+        
+    </script>
+</body>
+</html>
