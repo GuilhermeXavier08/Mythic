@@ -20,7 +20,7 @@ body{
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    background-color: #353535;
+    background: linear-gradient(to left, #555555, #555555, black);
     font-family: "Jaro";
     color: white;
 }
@@ -46,7 +46,7 @@ body{
     align-items: center;
     flex-direction: column;
     text-align: center;
-    background-color: #555555;
+    background: linear-gradient(to left, #353535,#555555);
 }
 .validar h1{
     font-family: "Jaro";

@@ -97,33 +97,7 @@
         
         // --- Firebase Authentication and Data Loading ---
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                userIdDisplay.textContent = `User ID: ${userId}`;
-                userDocRef = doc(db, `artifacts/${appId}/users/${userId}/flappyBird/gameState`);
-                
-                // Use onSnapshot for real-time high score updates
-                onSnapshot(userDocRef, async (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        highScore = data.highScore || 0;
-                        highScoreEl.textContent = highScore;
-                        console.log("High score loaded/updated:", highScore);
-                    } else {
-                        console.log("No previous game state found. Initializing.");
-                        highScore = 0;
-                        highScoreEl.textContent = highScore;
-                        // Initialize document for the new user
-                        await setDoc(userDocRef, { highScore: 0, lastPlayed: serverTimestamp() });
-                    }
-                }, (error) => {
-                    console.error("Error with Firestore snapshot:", error);
-                });
-
-            } else {
-                userIdDisplay.textContent = "Not signed in.";
-                console.log("User is not signed in.");
-            }
+            
              // Initialize game state after auth check
             resetGame();
             gameLoop();

@@ -16,8 +16,8 @@ body{
 }
 .left{
     height: 100vh;
-    width: 30%;
-    background-color: #555555;
+    width: 20%;
+    background: linear-gradient(to right, #353535, #555555);
     display: flex;
     padding-top: 150px;
     align-items: center;
@@ -58,8 +58,8 @@ body{
 
 .right{
     height: 100vh;
-    width: 70%;
-    background-color: #353535;
+    width: 80%;
+    background: linear-gradient(to right, #555555, #555555, #353535, black);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -75,7 +75,7 @@ body{
 }
 
 .game-card {
-    background-color: #1f1f1f;
+    background-color: #6d6d6d;
     display: flex;
     align-items: center;
     padding: 10px;
@@ -101,11 +101,31 @@ body{
     font-size: 20px;
 }
 
-
-.size {
-    font-size: 14px;
-    color: #aaa;
+.section-title {
+    font-family: "Jaro";
+    font-size: 36px;
+    color: white;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #777;
+    padding-bottom: 5px;
+    font-weight: normal;
 }
+
+.game-info h2 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: normal;
+    align-self: flex-start;
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+.game-info .size {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #ccc;
+}
+
 
 .abrir {
     margin-top: 5px;
@@ -118,7 +138,7 @@ body{
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    width: 80%;
+    width: 100px;
     height: 100%;
     text-align: center;
 }
